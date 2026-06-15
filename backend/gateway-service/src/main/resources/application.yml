@@ -95,6 +95,7 @@ gateway:
     - /api/ai/health
     - /api/ai/chat
     - /api/ai/sessions/*/messages
+    - /api/files/public/**
     - /actuator/**
 
 management:

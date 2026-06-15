@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Card, Form, Input, Button, message, Typography } from 'antd';
 import { fetchAdminAbout, updateAbout } from '@/api/content';
 import { AboutSaveRequest } from '@/types/content';
+import ImageUploadField from '@/components/ImageUploadField';
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -61,8 +62,8 @@ export default function AboutAdminPage() {
           <Form.Item name="linkedinUrl" label="LinkedIn">
             <Input />
           </Form.Item>
-          <Form.Item name="avatarUrl" label="头像 URL">
-            <Input />
+          <Form.Item name="avatarUrl" label="头像">
+            <ImageUploadField bizType="avatar" label="头像" />
           </Form.Item>
           <Button type="primary" onClick={onSave} loading={saving}>
             保存

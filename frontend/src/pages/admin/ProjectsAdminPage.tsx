@@ -7,6 +7,7 @@ import {
   createProject, deleteProject, fetchAdminProjects, updateProject,
 } from '@/api/content';
 import { ProjectItem, ProjectSaveRequest } from '@/types/content';
+import ImageUploadField from '@/components/ImageUploadField';
 
 export default function ProjectsAdminPage() {
   const [list, setList] = useState<ProjectItem[]>([]);
@@ -127,8 +128,8 @@ export default function ProjectsAdminPage() {
           <Form.Item name="demoUrl" label="演示地址">
             <Input />
           </Form.Item>
-          <Form.Item name="coverUrl" label="封面 URL">
-            <Input />
+          <Form.Item name="coverUrl" label="封面图">
+            <ImageUploadField bizType="cover" label="封面" />
           </Form.Item>
           <Form.Item name="sortOrder" label="排序">
             <InputNumber min={0} />

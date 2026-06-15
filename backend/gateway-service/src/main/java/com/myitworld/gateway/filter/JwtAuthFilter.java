@@ -61,7 +61,8 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
 
         // 1. 白名单路径：无 Token 也可访问；若带了有效 Token 则注入用户信息（供 ai-service 绑定会话）
         if (isWhitelisted(path) || isPublicBlogRead(path, request.getMethod())
-                || isPublicContentRead(path, request.getMethod())) {
+                || isPublicContentRead(path, request.getMethod())
+                || isPublicFileRead(path, request.getMethod())) {
             return filterWithOptionalAuth(exchange, chain, request);
         }
 
@@ -210,6 +211,16 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
             return true;
         }
         return path.matches("/api/content/projects/\\d+");
+    }
+
+    /**
+     * 文件服务公开读（GET）：头像、封面等静态资源
+     */
+    private boolean isPublicFileRead(String path, HttpMethod method) {
+        if (!HttpMethod.GET.equals(method)) {
+            return false;
+        }
+        return path.startsWith("/api/files/public/");
     }
 
     /**

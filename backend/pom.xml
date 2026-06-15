@@ -23,6 +23,7 @@
         <module>gateway-service</module>
         <module>blog-service</module>
         <module>content-service</module>
+        <module>file-service</module>
     </modules>
 
     <properties>
@@ -98,6 +99,11 @@
                 <groupId>cn.hutool</groupId>
                 <artifactId>hutool-all</artifactId>
                 <version>${hutool.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.minio</groupId>
+                <artifactId>minio</artifactId>
+                <version>8.5.11</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

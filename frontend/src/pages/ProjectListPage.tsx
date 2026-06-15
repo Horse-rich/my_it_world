@@ -33,6 +33,15 @@ export default function ProjectListPage() {
         {projects.map((p) => (
           <Col xs={24} sm={12} key={p.id}>
             <Card
+              cover={
+                p.coverUrl ? (
+                  <img
+                    alt={p.name}
+                    src={p.coverUrl}
+                    style={{ height: 160, objectFit: 'cover' }}
+                  />
+                ) : undefined
+              }
               title={
                 <Link to={`/projects/${p.id}`}>{p.name}</Link>
               }

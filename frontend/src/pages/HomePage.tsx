@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Card, Col, Row, Typography, Tag, Space, List, Button, Spin } from 'antd';
+import { Card, Col, Row, Typography, Tag, Space, List, Button, Spin, Avatar } from 'antd';
 import { Link } from 'react-router-dom';
 import {
   RocketOutlined,
@@ -35,25 +35,30 @@ export default function HomePage() {
   return (
     <div style={{ maxWidth: 960, margin: '0 auto' }}>
       <Card style={{ marginBottom: 24 }}>
-        <Title level={2}>
-          <RocketOutlined /> {about?.slogan || '欢迎来到 My IT World'}
-        </Title>
-        <Paragraph>{about?.summary}</Paragraph>
-        <Space wrap>
-          {about?.location && <Tag>{about.location}</Tag>}
-          {about?.githubUrl && (
-            <a href={about.githubUrl} target="_blank" rel="noreferrer">
-              <GithubOutlined /> GitHub
-            </a>
-          )}
-          {about?.csdnUrl && (
-            <a href={about.csdnUrl} target="_blank" rel="noreferrer">CSDN</a>
-          )}
-        </Space>
-        <div style={{ marginTop: 16 }}>
-          <Button type="link">
-            <Link to="/about">了解更多 →</Link>
-          </Button>
+        <div style={{ display: 'flex', gap: 20, alignItems: 'center', flexWrap: 'wrap' }}>
+          <Avatar size={72} src={about?.avatarUrl} icon={<RocketOutlined />} />
+          <div style={{ flex: 1, minWidth: 200 }}>
+            <Title level={2} style={{ marginBottom: 8 }}>
+              {about?.slogan || '欢迎来到 My IT World'}
+            </Title>
+            <Paragraph style={{ marginBottom: 8 }}>{about?.summary}</Paragraph>
+            <Space wrap>
+              {about?.location && <Tag>{about.location}</Tag>}
+              {about?.githubUrl && (
+                <a href={about.githubUrl} target="_blank" rel="noreferrer">
+                  <GithubOutlined /> GitHub
+                </a>
+              )}
+              {about?.csdnUrl && (
+                <a href={about.csdnUrl} target="_blank" rel="noreferrer">CSDN</a>
+              )}
+            </Space>
+            <div style={{ marginTop: 12 }}>
+              <Button type="link" style={{ paddingLeft: 0 }}>
+                <Link to="/about">了解更多 →</Link>
+              </Button>
+            </div>
+          </div>
         </div>
       </Card>
 
@@ -89,7 +94,19 @@ export default function HomePage() {
               locale={{ emptyText: '暂无项目' }}
               renderItem={(item) => (
                 <List.Item>
-                  <Link to={`/projects/${item.id}`}>{item.name}</Link>
+                  <List.Item.Meta
+                    avatar={
+                      item.coverUrl ? (
+                        <img
+                          src={item.coverUrl}
+                          alt={item.name}
+                          style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 6 }}
+                        />
+                      ) : undefined
+                    }
+                    title={<Link to={`/projects/${item.id}`}>{item.name}</Link>}
+                    description={item.description?.slice(0, 60)}
+                  />
                 </List.Item>
               )}
             />

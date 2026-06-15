@@ -32,7 +32,17 @@ export default function ProjectDetailPage() {
       <Button type="link" icon={<ArrowLeftOutlined />} style={{ paddingLeft: 0 }}>
         <Link to="/projects">返回项目列表</Link>
       </Button>
-      <Card>
+      <Card
+        cover={
+          project.coverUrl ? (
+            <img
+              alt={project.name}
+              src={project.coverUrl}
+              style={{ maxHeight: 320, objectFit: 'cover' }}
+            />
+          ) : undefined
+        }
+      >
         <Title level={2}>{project.name}</Title>
         {project.featured === 1 && <Tag color="gold">精选项目</Tag>}
         <Paragraph style={{ marginTop: 16 }}>{project.description}</Paragraph>

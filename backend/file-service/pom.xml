@@ -10,9 +10,9 @@
         <version>1.0.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>content-service</artifactId>
-    <name>content-service</name>
-    <description>内容展示微服务 - 关于我 / 技能 / 项目 / 首页聚合</description>
+    <artifactId>file-service</artifactId>
+    <name>file-service</name>
+    <description>文件微服务 - MinIO 上传 / 公开访问 / 元数据记录</description>
 
     <dependencies>
         <dependency>
@@ -36,14 +36,6 @@
             <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-openfeign</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-loadbalancer</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
         </dependency>
@@ -53,8 +45,8 @@
             <scope>runtime</scope>
         </dependency>
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-redis</artifactId>
+            <groupId>io.minio</groupId>
+            <artifactId>minio</artifactId>
         </dependency>
         <dependency>
             <groupId>com.github.xiaoymin</groupId>
