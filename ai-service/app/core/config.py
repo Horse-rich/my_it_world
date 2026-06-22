@@ -49,6 +49,33 @@ class Settings(BaseSettings):
     # 登录用户会话 Redis TTL（秒），0 表示不过期
     user_session_ttl_seconds: int = 0
 
+    # Gateway 地址（拉取博客正文）
+    gateway_base_url: str = "http://127.0.0.1:8080"
+
+    # blog-service 内网地址（入库任务直连，避免后台二次过 Gateway 时 Token 失效）
+    blog_service_base_url: str = "http://127.0.0.1:8084"
+
+    # Qdrant 向量库
+    qdrant_url: str = "http://127.0.0.1:6333"
+    qdrant_collection: str = "blog_chunks"
+
+    # Embedding：ollama（本地/远程）或 dashscope（百炼）
+    embedding_provider: str = "ollama"
+    ollama_base_url: str = "http://127.0.0.1:11434"
+    ollama_timeout_seconds: float = 120.0
+    embedding_model: str = "qwen3-embedding:0.6b"
+    embedding_dimension: int = 1024
+
+    # 文档切分
+    chunk_size: int = 800
+    chunk_overlap: int = 128
+
+    # 检索默认 Top-K（验收 / RAG 复用）
+    search_top_k: int = 5
+
+    # RAG 相似度下限（Cosine，0 表示不过滤）
+    rag_min_score: float = 0.0
+
     @property
     def mysql_url(self) -> str:
         return (

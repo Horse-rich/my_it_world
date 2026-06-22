@@ -79,6 +79,8 @@ def get_session_messages(
             role=m["role"],
             content=m["content"],
             created_at=m.get("created_at"),
+            sources=m.get("sources"),
+            ragEnabled=m.get("rag_enabled"),
         )
         for m in raw
     ]

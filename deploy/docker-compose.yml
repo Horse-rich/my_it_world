@@ -2,7 +2,7 @@
 # My IT World 基础设施 Docker Compose
 # 启动：docker compose up -d
 # 停止：docker compose down
-# 包含：MySQL、Redis、Nacos、MinIO
+# 包含：MySQL、Redis、Nacos、MinIO、Qdrant
 # ============================================================
 services:
   # MySQL 8.x 数据库
@@ -85,8 +85,27 @@ services:
       timeout: 5s
       retries: 5
 
+  # Qdrant 向量数据库（AI RAG 知识库）
+  qdrant:
+    image: qdrant/qdrant:v1.9.2
+    container_name: myit-qdrant
+    restart: unless-stopped
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    environment:
+      TZ: Asia/Shanghai
+    volumes:
+      - qdrant_data:/qdrant/storage
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6333/healthz"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
 volumes:
   mysql_data:
   redis_data:
   nacos_data:
   minio_data:
+  qdrant_data:

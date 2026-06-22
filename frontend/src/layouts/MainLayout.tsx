@@ -13,6 +13,7 @@ import {
   ProjectOutlined,
 } from '@ant-design/icons';
 import { useAuthStore } from '@/stores/authStore';
+import { useAuthBootstrap } from '@/hooks/useAuthBootstrap';
 
 const { Header, Content, Footer } = Layout;
 const { Text } = Typography;
@@ -27,7 +28,9 @@ const { Text } = Typography;
 export default function MainLayout() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { isAuthenticated, user, logout, isAdmin } = useAuthStore();
+  const { isAuthenticated, user, logout, isAdmin, loading } = useAuthStore();
+
+  useAuthBootstrap();
 
   /** 顶部导航菜单项 */
   const menuItems = [
@@ -105,7 +108,7 @@ export default function MainLayout() {
           {isAuthenticated ? (
             <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
               <Button type="text" icon={<UserOutlined />} style={{ color: '#fff' }}>
-                {user?.username}
+                {loading && !user ? '...' : user?.username}
               </Button>
             </Dropdown>
           ) : (

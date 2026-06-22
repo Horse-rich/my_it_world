@@ -12,6 +12,19 @@ class ChatMessage(BaseModel):
     role: str = Field(description="user 或 assistant")
     content: str
     created_at: Optional[str] = None
+    sources: Optional[List["ChatSource"]] = None
+    ragEnabled: Optional[bool] = None
+
+
+class ChatSource(BaseModel):
+    """RAG 引用来源。"""
+
+    blogId: int
+    title: str
+    sourceUrl: str
+    chunkIndex: int
+    score: float
+    textPreview: Optional[str] = None
 
 
 class ChatRequest(BaseModel):
@@ -28,6 +41,19 @@ class ChatResponseData(BaseModel):
     session_id: str
     model: str
     message_id: Optional[int] = None
+    sources: Optional[List[ChatSource]] = None
+    ragEnabled: Optional[bool] = None
+
+
+class ChatStreamDoneData(BaseModel):
+    """SSE done 事件数据。"""
+
+    session_id: str = Field(alias="sessionId")
+    model: str
+    message_id: Optional[int] = Field(default=None, alias="messageId")
+    rag_enabled: Optional[bool] = Field(default=None, alias="ragEnabled")
+
+    model_config = {"populate_by_name": True}
 
 
 class SessionSummary(BaseModel):
@@ -61,6 +87,80 @@ class UpdateSessionRequest(BaseModel):
     """修改会话标题。"""
 
     title: str = Field(..., min_length=1, max_length=200)
+
+
+class IngestBlogResult(BaseModel):
+    """单篇博客入库结果。"""
+
+    blogId: int
+    title: Optional[str] = None
+    status: str
+    chunkCount: int
+    lastIndexedAt: Optional[str] = None
+
+
+class DocumentIndexStatus(BaseModel):
+    """索引状态项。"""
+
+    blogId: int
+    title: Optional[str] = None
+    status: str
+    chunkCount: int
+    errorMsg: Optional[str] = None
+    lastIndexedAt: Optional[str] = None
+    updatedAt: Optional[str] = None
+
+
+class IngestSearchRequest(BaseModel):
+    """检索验收请求。"""
+
+    query: str = Field(..., min_length=1, max_length=2000)
+    topK: int = Field(default=5, ge=1, le=20)
+
+
+class IngestSearchHit(BaseModel):
+    """检索命中项。"""
+
+    score: float
+    blogId: int
+    title: str
+    chunkIndex: int
+    sourceUrl: str
+    text: str
+    publishTime: Optional[str] = None
+
+
+class KnowledgeSettingsData(BaseModel):
+    """知识库访问权限配置。"""
+
+    guestRagEnabled: bool
+    userRagEnabled: bool
+    updatedAt: Optional[str] = None
+
+
+class KnowledgeSettingsUpdateRequest(BaseModel):
+    guestRagEnabled: bool
+    userRagEnabled: bool
+
+
+class KnowledgeAccessData(BaseModel):
+    guestRagEnabled: bool
+    userRagEnabled: bool
+    currentUserAllowed: bool
+    currentUserType: str
+    updatedAt: Optional[str] = None
+
+
+class IngestRebuildRequest(BaseModel):
+    onlyPublished: bool = True
+    skipDone: bool = False
+
+
+class IngestRebuildResult(BaseModel):
+    success: int
+    failed: int
+    skipped: int
+    errors: List[dict]
 
 
 class Result(BaseModel):

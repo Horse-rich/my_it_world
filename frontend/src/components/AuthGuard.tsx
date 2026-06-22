@@ -1,7 +1,7 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { Spin } from 'antd';
-import { useEffect } from 'react';
 import { useAuthStore } from '@/stores/authStore';
+import { useAuthBootstrap } from '@/hooks/useAuthBootstrap';
 import { isLoggedIn } from '@/utils/token';
 
 interface AuthGuardProps {
@@ -21,16 +21,14 @@ interface AuthGuardProps {
  */
 export default function AuthGuard({ requireAuth = false, requireAdmin = false }: AuthGuardProps) {
   const location = useLocation();
-  const { isAuthenticated, user, loading, fetchUser, isAdmin } = useAuthStore();
+  const { isAuthenticated, user, loading, isAdmin } = useAuthStore();
 
-  // 页面加载时，若本地有 Token 但 store 无用户信息，则拉取 /me
-  useEffect(() => {
-    if (isLoggedIn() && !user) {
-      fetchUser();
-    }
-  }, [user, fetchUser]);
+  useAuthBootstrap();
 
-  if (loading) {
+  // 刷新页面时 Token 在 sessionStorage，但 user 尚未从 /me 拉回，需等待而非误判为无权限
+  const bootstrapping = isLoggedIn() && !user;
+
+  if (loading || bootstrapping) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 120 }}>
         <Spin size="large" tip="加载中..." />

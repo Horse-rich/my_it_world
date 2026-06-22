@@ -14,16 +14,29 @@ from app.core.config import settings
 from app.services.chat_history import get_session_history
 
 _chain_with_history: Optional[RunnableWithMessageHistory] = None
+_llm: Optional[ChatTongyi] = None
+_llm_stream: Optional[ChatTongyi] = None
 
 
-def _build_chain() -> RunnableWithMessageHistory:
+def get_llm(streaming: bool = False) -> ChatTongyi:
+    """获取 ChatTongyi 实例（对话仍走百炼 DashScope）。"""
+    global _llm, _llm_stream
     if not settings.dashscope_api_key:
         raise ValueError(
             "未配置 DASHSCOPE_API_KEY，请在 ai-service/.env 中设置通义千问 API Key"
         )
     os.environ["DASHSCOPE_API_KEY"] = settings.dashscope_api_key
 
-    llm = ChatTongyi(model=settings.tongyi_model)
+    if streaming:
+        if _llm_stream is None:
+            _llm_stream = ChatTongyi(model=settings.tongyi_model, streaming=True)
+        return _llm_stream
+
+    if _llm is None:
+        _llm = ChatTongyi(model=settings.tongyi_model)
+    return _llm
+def _build_chain() -> RunnableWithMessageHistory:
+    llm = get_llm(streaming=False)
     prompt = ChatPromptTemplate.from_messages(
         [
             ("system", settings.system_prompt),

@@ -94,6 +94,8 @@ gateway:
     - /api/auth/refresh
     - /api/ai/health
     - /api/ai/chat
+    - /api/ai/chat/stream
+    - /api/ai/knowledge/access
     - /api/ai/sessions/*/messages
     - /api/files/public/**
     - /actuator/**

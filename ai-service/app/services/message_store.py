@@ -59,8 +59,14 @@ class ChatMessageStore:
         role: str,
         content: str,
         session: Optional[AiChatSession] = None,
+        sources_json: Optional[dict] = None,
     ) -> AiChatMessage:
-        row = AiChatMessage(session_id=session_id, role=role, content=content)
+        row = AiChatMessage(
+            session_id=session_id,
+            role=role,
+            content=content,
+            sources_json=sources_json,
+        )
         self._db.add(row)
         self._db.commit()
         self._db.refresh(row)
@@ -132,9 +138,16 @@ class ChatMessageStore:
             created_str = created.isoformat()
         else:
             created_str = str(created)
-        return {
+        item = {
             "id": row.id,
             "role": row.role,
             "content": row.content,
             "created_at": created_str,
         }
+        if row.sources_json:
+            sources = row.sources_json.get("sources")
+            if sources is not None:
+                item["sources"] = sources
+            if "ragEnabled" in row.sources_json:
+                item["rag_enabled"] = bool(row.sources_json.get("ragEnabled"))
+        return item

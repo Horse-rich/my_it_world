@@ -3,7 +3,7 @@ import {
   deleteChatSession,
   getSessionMessages,
   listChatSessions,
-  sendChatMessage,
+  sendChatMessageStream,
 } from '@/api/ai';
 import { ChatMessage, SessionSummary } from '@/types/ai';
 
@@ -75,35 +75,76 @@ export const useChatStore = create<ChatState>((set, get) => ({
     if (!text.trim() || sending) return;
 
     const userMsg: ChatMessage = { role: 'user', content: text.trim() };
+    const assistantMsg: ChatMessage = { role: 'assistant', content: '' };
     set({
-      messages: [...messages, userMsg],
+      messages: [...messages, userMsg, assistantMsg],
       sending: true,
     });
 
-    try {
-      const res = await sendChatMessage({
-        message: text.trim(),
-        session_id: currentSessionId,
+    const updateAssistant = (patch: Partial<ChatMessage>) => {
+      set((state) => {
+        const next = [...state.messages];
+        const lastIdx = next.length - 1;
+        if (lastIdx >= 0 && next[lastIdx].role === 'assistant') {
+          next[lastIdx] = { ...next[lastIdx], ...patch };
+        }
+        return { messages: next };
       });
-      const assistantMsg: ChatMessage = { role: 'assistant', content: res.content };
-      set((state) => ({
-        currentSessionId: res.session_id,
-        messages: [...state.messages, assistantMsg],
-        sending: false,
-      }));
-      get().persistLastSession(res.session_id);
-      await get().loadSessions();
-    } catch (e) {
-      set((state) => ({
-        messages: [
-          ...state.messages,
-          {
-            role: 'assistant',
-            content: `抱歉，请求失败：${e instanceof Error ? e.message : '未知错误'}`,
+    };
+
+    try {
+      await sendChatMessageStream(
+        {
+          message: text.trim(),
+          session_id: currentSessionId,
+        },
+        {
+          onSource: (sources, ragEnabled) => {
+            updateAssistant({ sources, ragEnabled });
           },
-        ],
-        sending: false,
-      }));
+          onToken: (chunk) => {
+            set((state) => {
+              const next = [...state.messages];
+              const lastIdx = next.length - 1;
+              if (lastIdx >= 0 && next[lastIdx].role === 'assistant') {
+                next[lastIdx] = {
+                  ...next[lastIdx],
+                  content: next[lastIdx].content + chunk,
+                };
+              }
+              return { messages: next };
+            });
+          },
+          onDone: (data) => {
+            updateAssistant({
+              id: data.messageId,
+              ragEnabled: data.ragEnabled,
+            });
+            set({
+              currentSessionId: data.sessionId,
+              sending: false,
+            });
+            get().persistLastSession(data.sessionId);
+            get().loadSessions();
+          },
+          onError: (message) => {
+            updateAssistant({ content: `抱歉，请求失败：${message}` });
+            set({ sending: false });
+          },
+        }
+      );
+    } catch (e) {
+      set((state) => {
+        const next = [...state.messages];
+        const lastIdx = next.length - 1;
+        if (lastIdx >= 0 && next[lastIdx].role === 'assistant' && !next[lastIdx].content) {
+          next[lastIdx] = {
+            ...next[lastIdx],
+            content: `抱歉，请求失败：${e instanceof Error ? e.message : '未知错误'}`,
+          };
+        }
+        return { messages: next, sending: false };
+      });
     }
   },
 

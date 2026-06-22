@@ -19,6 +19,7 @@ import ProjectDetailPage from '@/pages/ProjectDetailPage';
 import AboutAdminPage from '@/pages/admin/AboutAdminPage';
 import SkillsAdminPage from '@/pages/admin/SkillsAdminPage';
 import ProjectsAdminPage from '@/pages/admin/ProjectsAdminPage';
+import KnowledgeAdminPage from '@/pages/admin/KnowledgeAdminPage';
 
 export default function App() {
   return (
@@ -45,6 +46,7 @@ export default function App() {
               <Route path="/admin/about" element={<AboutAdminPage />} />
               <Route path="/admin/skills" element={<SkillsAdminPage />} />
               <Route path="/admin/projects" element={<ProjectsAdminPage />} />
+              <Route path="/admin/knowledge" element={<KnowledgeAdminPage />} />
             </Route>
           </Route>
 
