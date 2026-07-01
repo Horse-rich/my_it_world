@@ -102,7 +102,13 @@ class IngestService:
 
     def search(self, query: str, top_k: Optional[int] = None) -> List[SearchHit]:
         vector = embed_query(query)
-        return self.vector_store.search(query_vector=vector, top_k=top_k)
+        hits = self.vector_store.search(query_vector=vector, top_k=top_k)
+        if hits:
+            return hits
+        return self.vector_store.keyword_search(query, top_k=top_k)
+
+    def keyword_search(self, query: str, top_k: Optional[int] = None) -> List[SearchHit]:
+        return self.vector_store.keyword_search(query, top_k=top_k)
 
     def execute_rebuild_blogs(
         self,

@@ -80,13 +80,20 @@ class RagService:
 
         try:
             hits = self.ingest.search(query, top_k=top_k)
-            if settings.rag_min_score > 0:
-                hits = [h for h in hits if h.score >= settings.rag_min_score]
-            if not hits:
-                return [], [], None, True
-            sources = hits_to_sources(hits)
-            context = format_rag_context(hits)
-            return hits, sources, context, True
         except Exception as exc:
-            logger.warning("RAG 检索失败，降级为纯 LLM: %s", exc)
+            logger.warning("RAG 向量检索失败，尝试关键词兜底: %s", exc, exc_info=True)
+            hits = self.ingest.keyword_search(query, top_k=top_k)
+            if not hits:
+                err_ctx = (
+                    f"[RAG_ERROR] Embedding 或向量检索失败: {exc}。"
+                    "请说明检索服务暂时不可用，勿声称 hits=0。"
+                )
+                return [], [], err_ctx, True
+
+        if settings.rag_min_score > 0:
+            hits = [h for h in hits if h.score >= settings.rag_min_score]
+        if not hits:
             return [], [], None, True
+        sources = hits_to_sources(hits)
+        context = format_rag_context(hits)
+        return hits, sources, context, True

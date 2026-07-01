@@ -2,17 +2,22 @@
 
 from __future__ import annotations
 
+import logging
 import os
+import time
 from typing import List
 
 import httpx
 
 from app.core.config import settings
 
+logger = logging.getLogger(__name__)
+
 # DashScope 单次 batch 上限
 _DASHSCOPE_BATCH_SIZE = 25
 # Ollama 单次 batch（可按机器性能调整）
 _OLLAMA_BATCH_SIZE = 32
+_OLLAMA_MAX_RETRIES = 2
 
 
 def embed_texts(texts: List[str]) -> List[List[float]]:
@@ -61,21 +66,40 @@ def _embed_ollama(texts: List[str]) -> List[List[float]]:
     with httpx.Client(timeout=settings.ollama_timeout_seconds) as client:
         for start in range(0, len(texts), _OLLAMA_BATCH_SIZE):
             batch = texts[start : start + _OLLAMA_BATCH_SIZE]
-            response = client.post(
-                url,
-                json={"model": settings.embedding_model, "input": batch},
-            )
-            if response.status_code != 200:
-                raise RuntimeError(
-                    f"Ollama Embedding 失败: HTTP {response.status_code} {response.text}"
-                )
-            data = response.json()
-            embeddings = data.get("embeddings") or []
-            if len(embeddings) != len(batch):
-                raise RuntimeError(
-                    f"Ollama 返回向量数不匹配: 期望 {len(batch)}，实际 {len(embeddings)}"
-                )
-            all_vectors.extend(embeddings)
+            last_error: Exception | None = None
+            for attempt in range(_OLLAMA_MAX_RETRIES + 1):
+                try:
+                    response = client.post(
+                        url,
+                        json={"model": settings.embedding_model, "input": batch},
+                    )
+                    if response.status_code != 200:
+                        raise RuntimeError(
+                            f"Ollama Embedding 失败: HTTP {response.status_code} {response.text}"
+                        )
+                    data = response.json()
+                    embeddings = data.get("embeddings") or []
+                    if len(embeddings) != len(batch):
+                        raise RuntimeError(
+                            f"Ollama 返回向量数不匹配: 期望 {len(batch)}，实际 {len(embeddings)}"
+                        )
+                    all_vectors.extend(embeddings)
+                    last_error = None
+                    break
+                except (httpx.TimeoutException, httpx.HTTPError, RuntimeError) as exc:
+                    last_error = exc
+                    if attempt < _OLLAMA_MAX_RETRIES:
+                        wait = 1.5 * (attempt + 1)
+                        logger.warning(
+                            "Ollama Embedding 失败，%ss 后重试 (%d/%d): %s",
+                            wait,
+                            attempt + 1,
+                            _OLLAMA_MAX_RETRIES,
+                            exc,
+                        )
+                        time.sleep(wait)
+            if last_error is not None:
+                raise RuntimeError(f"Ollama Embedding 失败: {last_error}") from last_error
 
     return all_vectors
 

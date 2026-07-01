@@ -76,6 +76,14 @@ class Settings(BaseSettings):
     # RAG 相似度下限（Cosine，0 表示不过滤）
     rag_min_score: float = 0.0
 
+    # 对话模式：agent（ReAct + 工具）或 rag（固定检索流水线）
+    chat_mode: str = "agent"
+
+    # Agent 运行时
+    agent_model: str = "qwen-plus"
+    agent_max_steps: int = 6
+    agent_verbose_log: bool = False
+
     @property
     def mysql_url(self) -> str:
         return (

@@ -32,6 +32,10 @@ class ChatRequest(BaseModel):
 
     message: str = Field(..., min_length=1, max_length=4000, description="用户问题")
     session_id: Optional[str] = Field(default=None, description="会话 ID，可选")
+    use_agent: Optional[bool] = Field(
+        default=None,
+        description="是否走 Agent 编排；未指定时由 CHAT_MODE 配置决定",
+    )
 
 
 class ChatResponseData(BaseModel):

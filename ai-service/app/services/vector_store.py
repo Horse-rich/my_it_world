@@ -219,6 +219,64 @@ class VectorStore:
         info = self.client.get_collection(self.collection)
         return int(info.points_count or 0)
 
+    def keyword_search(self, query: str, top_k: Optional[int] = None) -> List[SearchHit]:
+        """
+        向量检索无命中时的兜底：在 payload 标题/正文里做子串匹配（适合专有名词、人名）。
+        """
+        if not self.client.collection_exists(self.collection):
+            return []
+
+        limit = top_k or settings.search_top_k
+        tokens = _extract_keyword_tokens(query)
+        if not tokens:
+            return []
+
+        records, _ = self.client.scroll(
+            collection_name=self.collection,
+            limit=256,
+            with_payload=True,
+            with_vectors=False,
+        )
+
+        matched: List[SearchHit] = []
+        for record in records:
+            payload = record.payload or {}
+            title = str(payload.get("title") or "")
+            text = str(payload.get("text") or "")
+            blob = f"{title}\n{text}"
+            if not any(token in blob for token in tokens):
+                continue
+            matched.append(
+                SearchHit(
+                    score=0.99,
+                    blog_id=int(payload.get("blog_id", 0)),
+                    title=title,
+                    chunk_index=int(payload.get("chunk_index", 0)),
+                    source_url=str(payload.get("source_url") or ""),
+                    text=text,
+                    publish_time=payload.get("publish_time"),
+                )
+            )
+
+        matched.sort(key=lambda h: h.score, reverse=True)
+        return matched[:limit]
+
+
+def _extract_keyword_tokens(query: str) -> List[str]:
+    """从查询中提取可用于子串匹配的关键词（中文连续字 + 英文单词）。"""
+    import re
+
+    raw = query.strip()
+    if not raw:
+        return []
+    tokens: List[str] = []
+    for part in re.findall(r"[\u4e00-\u9fff]{2,}|[A-Za-z0-9]{2,}", raw):
+        if part not in tokens:
+            tokens.append(part)
+    if not tokens and len(raw) >= 2:
+        tokens.append(raw)
+    return tokens
+
 
 def get_vector_store() -> VectorStore:
     global _vector_store
